@@ -18,6 +18,12 @@ import {
 
 const REQUEST_TIMEOUT_MS = 10000;
 
+interface PendingRequest {
+    resolve: (value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
+    reject: (reason?: Error) => void;
+    timeout: NodeJS.Timeout;
+}
+
 /**
  * A client to manage a WebSocket connection and handle request-response commands
  * as well as spontaneous server-sent notifications.
@@ -25,8 +31,8 @@ const REQUEST_TIMEOUT_MS = 10000;
 export class WebSocketClient extends EventEmitter {
     private ws: WebSocket | null = null;
     private handleCounter = 1;
-    private pendingRequests = new Map<number, { resolve: (value: any) => void; reject: (reason?: any) => void; timeout: NodeJS.Timeout }>();
-    private pendingSubscriptions = new Map<number, { resolve: (value: any) => void; reject: (reason?: any) => void; timeout: NodeJS.Timeout }>();
+    private pendingRequests = new Map<number, PendingRequest>();
+    private pendingSubscriptions = new Map<number, PendingRequest>();
 
     constructor() {
         super();
@@ -47,9 +53,9 @@ export class WebSocketClient extends EventEmitter {
             this.ws?.on('message', this.handleMessage.bind(this));
             this.ws?.on('close', (code, reason) => {
                 console.log(`WebSocket connection closed. Code: ${code}, Reason: ${reason.toString()}`);
-                this.pendingRequests.forEach(req => req.reject('Connection closed'));
+                this.pendingRequests.forEach(req => req.reject(new Error('Connection closed')));
                 this.pendingRequests.clear();
-                this.pendingSubscriptions.forEach(req => req.reject('Connection closed'));
+                this.pendingSubscriptions.forEach(req => req.reject(new Error('Connection closed')));
                 this.pendingSubscriptions.clear();
             });
         });
