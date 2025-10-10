@@ -16,6 +16,11 @@ var is04DeviceId = "67c25159-ce25-4000-a66c-f31fff890265";
 var is04Version = "v1.3";
 ```
 
+Build
+```
+npm run build
+```
+
 Run
 ```
 npm start
