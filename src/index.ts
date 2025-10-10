@@ -60,7 +60,7 @@ async function main() {
         var subscriptions: number[] = [ 1 ];
 
         console.log('\n📝 Subscribe to root object oid 1');
-        const subRootObject = await client.sendSubscriptions<number[]>(subscriptions);
+        await client.sendSubscriptions<number[]>(subscriptions);
         console.log('✅ Subscribed to root object oid of 1');
 
         var newLabel = "ABC XYZ";
@@ -68,7 +68,7 @@ async function main() {
             newLabel = "XYZ ABC";
 
         console.log('\n📝 Set root user label to:', newLabel);
-        const setUserLabelCmdResult = await client.sendCommand<NcMethodResult>(1, { level: 1, index: 2 }, { id: { level: 1, index: 6 }, value: newLabel });
+        await client.sendCommand<NcMethodResult>(1, { level: 1, index: 2 }, { id: { level: 1, index: 6 }, value: newLabel });
         console.log('✅ Successfully set root user label to:', newLabel);
 
         console.log('\n📝 Get root user label after update');
@@ -88,7 +88,7 @@ async function main() {
             subscriptions = subscriptions.concat(getReceiverMonitors.value.map(m => m.oid));
 
             console.log('\n📝 Subscribe to all receiver monitor oids');
-            const subAddReceiverMonitors = await client.sendSubscriptions<number[]>(subscriptions);
+            await client.sendSubscriptions<number[]>(subscriptions);
             console.log('✅ Subscribed to root object and all receiver monitors');
         }
 

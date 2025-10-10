@@ -85,7 +85,7 @@ export enum NcPropertyChangeType {
 export interface NcPropertyChangedEventData {
     propertyId: NcElementId;
     changeType: NcPropertyChangeType,
-    value: any | null,
+    value: unknown | null,
     sequenceItemIndex: number | null
 }
 
