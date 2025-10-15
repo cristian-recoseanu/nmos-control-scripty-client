@@ -126,6 +126,9 @@ async function main() {
             }
         }
 
+        console.log('\n📝 Discover the entire device model recursively starting from the root block with oid: 1');
+        await discoverDeviceModel(client);
+
         console.log("\n🎉 All commands completed successfully!");
         console.log("Waiting for notifications... (Press Ctrl+C to exit)");
         // Keep the process alive to receive notifications
@@ -138,6 +141,40 @@ async function main() {
         if (client) {
             console.log("Closing WebSocket connection.");
             client.close();
+        }
+    }
+
+    async function discoverDeviceModel(
+        client: WebSocketClient,
+        oid: number = 1,
+        depth: number = 0
+    ): Promise<void> {
+        const indent = '\t'.repeat(depth);
+        
+        try {
+            const result = await client.sendCommand<NcMethodResultBlockMemberDescriptors>(
+                oid, 
+                { level: 2, index: 1 }, 
+                { recurse: false }
+            );
+            
+            for (const member of result.value) {
+                if(member.classId.join('.') == '1.1')
+                {
+                    console.log(
+                        `${indent}• Block Member - oid: ${member.oid}, role: ${member.role}, classId: ${member.classId.join('.')}, finding members`
+                    );
+
+                    // Recursively discover its members
+                    await discoverDeviceModel(client, member.oid, depth + 1);
+                }
+                else
+                    console.log(
+                        `${indent}• Member - oid: ${member.oid}, role: ${member.role}, classId: ${member.classId.join('.')}`
+                    );
+            }
+        } catch (error) {
+            console.error(`${indent}Error discovering members for oid ${oid}:`, error);
         }
     }
 }
