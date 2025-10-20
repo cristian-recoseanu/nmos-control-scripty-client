@@ -50,3 +50,25 @@ The following features are planned:
 * Showing how to find all sender monitor objects in a device model (using FindMembersByClassId in [NcBlock](https://specs.amwa.tv/ms-05-02/branches/v1.0.x/docs/Framework.html#ncblock) to find [NcSenderMonitor](https://specs.amwa.tv/nmos-control-feature-sets/branches/main/monitoring/#ncsendermonitor) members)
 * Showing how to retrieve the descriptor of any class so we can consume it generically (using GetControlClass in [NcClassManager](https://specs.amwa.tv/ms-05-02/branches/v1.0.x/docs/Framework.html#ncclassmanager))
 * Showing how to retrieve the descriptor of any datatype so we can consume it generically (using GetDatatype in [NcClassManager](https://specs.amwa.tv/ms-05-02/branches/v1.0.x/docs/Framework.html#ncclassmanager))
+
+## Other useful resources
+
+Here are other resources available around NMOS Control & Monitoring:
+
+* A Rust IS-12 example device implementation  
+https://github.com/cristian-recoseanu/nmos-control-rusty-device
+
+* A Python IS-12 example device implementation  
+https://github.com/cristian-recoseanu/nmos-control-rusty-device
+
+* A comprehensive Implementers guide (INFO-006)  
+https://specs.amwa.tv/info-006/
+
+* The nmos-device-control-mock showcasing a fully compliant and tested implementation of IS-12 and BCP-008 in TypeScript/NodeJS  
+https://github.com/AMWA-TV/nmos-device-control-mock
+
+* nmos-cpp open source library with a fully compliant and tested implementation of IS-12 and BCP-008 in C++  
+https://github.com/sony/nmos-cpp
+
+* nmos-testing framework  
+https://specs.amwa.tv/nmos-testing/
