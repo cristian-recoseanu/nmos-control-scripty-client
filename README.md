@@ -1,5 +1,7 @@
 # nmos-control-scripty-client
 
+[![Build Checks](https://github.com/cristian-recoseanu/nmos-control-scripty-client/actions/workflows/build_checks.yml/badge.svg)](https://github.com/cristian-recoseanu/nmos-control-scripty-client/actions/workflows/build_checks.yml)
+
 This is an example NMOS client implementing [IS-12](https://specs.amwa.tv/is-12/).  
 It serves as an implementation sample for Controller vendors, showcasing how to interact with device models expressed by [MS-05-02]() through the [IS-12](https://specs.amwa.tv/is-12/) protocol.
 
