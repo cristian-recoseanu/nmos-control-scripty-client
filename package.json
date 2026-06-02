@@ -22,9 +22,9 @@
     "@types/eslint": "^9.6.1",
     "@types/node": "^25.9.1",
     "@types/ws": "^8.18.1",
-    "@typescript-eslint/eslint-plugin": "^8.59.4",
+    "@typescript-eslint/eslint-plugin": "^8.60.1",
     "@typescript-eslint/parser": "^8.58.0",
-    "eslint": "^10.4.0",
+    "eslint": "^10.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
   }
