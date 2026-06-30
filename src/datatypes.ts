@@ -59,6 +59,48 @@ export interface NcMethodResultBlockMemberDescriptors extends NcMethodResult {
     value: NcBlockMemberDescriptor[];
 }
 
+export interface NcPropertyDescriptor {
+    description: string | null;
+    id: NcElementId;
+    name: string;
+    typeName: string | null;
+    isReadOnly: boolean;
+    isNullable: boolean;
+    isSequence: boolean;
+    isDeprecated: boolean;
+}
+
+export interface NcMethodDescriptor {
+    description: string | null;
+    id: NcElementId;
+    name: string;
+    resultDatatype: string;
+    parameters: unknown[];
+    isDeprecated: boolean;
+}
+
+export interface NcEventDescriptor {
+    description: string | null;
+    id: NcElementId;
+    name: string;
+    eventDatatype: string;
+    isDeprecated: boolean;
+}
+
+export interface NcClassDescriptor {
+    description: string | null;
+    classId: number[];
+    name: string;
+    fixedRole: string | null;
+    properties: NcPropertyDescriptor[];
+    methods: NcMethodDescriptor[];
+    events: NcEventDescriptor[];
+}
+
+export interface NcMethodResultClassDescriptor extends NcMethodResult {
+    value: NcClassDescriptor;
+}
+
 export interface Response {
     handle: number;
     result: NcMethodResult;
