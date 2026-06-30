@@ -10,7 +10,9 @@ import {
     NcMethodResultString,
     NcMethodResult,
     NcMethodResultBlockMemberDescriptors,
-    NcMethodResultNumber
+    NcMethodResultNumber,
+    NcMethodResultClassDescriptor,
+    NcClassDescriptor
 } from './datatypes';
 
 
@@ -201,6 +203,28 @@ async function main() {
         const classManager = getClassManagerByPath.value[0];
         console.log(`✅ Found NcClassManager - oid: ${classManager.oid}, role: ${classManager.role}, classId: ${classManager.classId.join('.')}, userLabel: ${classManager.userLabel}`);
 
+        if (getReceiverMonitors.value.length > 0) {
+            const receiverMonitorClassId = [1, 2, 2, 1];
+            console.log('\n📝 Get NcReceiverMonitor class descriptor using GetControlClass on NcClassManager');
+            console.log(`\tClass manager oid: ${classManager.oid}`);
+            console.log(`\tClass id: ${JSON.stringify(receiverMonitorClassId)}, includeInherited: true`);
+            const getReceiverMonitorClass = await client.sendCommand<NcMethodResultClassDescriptor>(
+                classManager.oid, { level: 3, index: 1 }, { classId: receiverMonitorClassId, includeInherited: true }
+            );
+            logClassDescriptor('NcReceiverMonitor', getReceiverMonitorClass.value);
+        }
+
+        if (getSenderMonitors.value.length > 0) {
+            const senderMonitorClassId = [1, 2, 2, 2];
+            console.log('\n📝 Get NcSenderMonitor class descriptor using GetControlClass on NcClassManager');
+            console.log(`\tClass manager oid: ${classManager.oid}`);
+            console.log(`\tClass id: ${JSON.stringify(senderMonitorClassId)}, includeInherited: true`);
+            const getSenderMonitorClass = await client.sendCommand<NcMethodResultClassDescriptor>(
+                classManager.oid, { level: 3, index: 1 }, { classId: senderMonitorClassId, includeInherited: true }
+            );
+            logClassDescriptor('NcSenderMonitor', getSenderMonitorClass.value);
+        }
+
         console.log("\n🎉 All commands completed successfully!");
         console.log("Waiting for notifications... (Press Ctrl+C to exit)");
         // Keep the process alive to receive notifications
@@ -214,6 +238,22 @@ async function main() {
             console.log("Closing WebSocket connection.");
             client.close();
         }
+    }
+
+    function logClassDescriptor(className: string, descriptor: NcClassDescriptor): void {
+        console.log(`✅ Received ${className} class descriptor - name: ${descriptor.name}, classId: ${descriptor.classId.join('.')}`);
+        console.log(`\tProperties (${descriptor.properties.length}):`);
+        descriptor.properties.forEach(p => {
+            console.log(`\t\t• ${p.id.level}p${p.id.index} ${p.name} (${p.typeName})${p.isReadOnly ? ', readonly' : ''}`);
+        });
+        console.log(`\tMethods (${descriptor.methods.length}):`);
+        descriptor.methods.forEach(m => {
+            console.log(`\t\t• ${m.id.level}m${m.id.index} ${m.name} -> ${m.resultDatatype}`);
+        });
+        console.log(`\tEvents (${descriptor.events.length}):`);
+        descriptor.events.forEach(e => {
+            console.log(`\t\t• ${e.id.level}e${e.id.index} ${e.name} (${e.eventDatatype})`);
+        });
     }
 
     async function discoverDeviceModel(
