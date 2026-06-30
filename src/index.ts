@@ -180,6 +180,27 @@ async function main() {
         console.log('\n📝 Discover the entire device model recursively starting from the root block with oid: 1');
         await discoverDeviceModel(client);
 
+        const rootBlockOid = 1;
+        const rootBlockRole = 'root';
+        const classManagerRole = 'ClassManager';
+        const classManagerRolePath = [rootBlockRole, classManagerRole];
+        const classManagerRelativePath = [classManagerRole];
+
+        console.log('\n📝 Find NcClassManager [1.3.2] using FindMembersByPath on the root block');
+        console.log(`\tRoot block - oid: ${rootBlockOid}, role: "${rootBlockRole}"`);
+        console.log(`\tFull role path: ${JSON.stringify(classManagerRolePath)}`);
+        console.log(`\tRelative path argument (excludes the root block role): ${JSON.stringify(classManagerRelativePath)}`);
+        const getClassManagerByPath = await client.sendCommand<NcMethodResultBlockMemberDescriptors>(
+            rootBlockOid, { level: 2, index: 2 }, { path: classManagerRelativePath }
+        );
+
+        if (getClassManagerByPath.value.length === 0) {
+            throw new Error(`Could not find NcClassManager at role path ${JSON.stringify(classManagerRolePath)}.`);
+        }
+
+        const classManager = getClassManagerByPath.value[0];
+        console.log(`✅ Found NcClassManager - oid: ${classManager.oid}, role: ${classManager.role}, classId: ${classManager.classId.join('.')}, userLabel: ${classManager.userLabel}`);
+
         console.log("\n🎉 All commands completed successfully!");
         console.log("Waiting for notifications... (Press Ctrl+C to exit)");
         // Keep the process alive to receive notifications
