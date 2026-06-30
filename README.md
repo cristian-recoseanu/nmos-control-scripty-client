@@ -44,12 +44,12 @@ The following features are working:
 * Discovering all objects of a device model by using the GetMemberDescriptors method ([NcBLock](https://specs.amwa.tv/ms-05-02/branches/v1.0.x/docs/Framework.html#ncblock))
 * Finding all receiver monitor objects inside a device model ([BCP-008-01](https://specs.amwa.tv/bcp-008-01/releases/v1.0.0/docs/Overview.html) and [NcReceiverMonitor](https://specs.amwa.tv/nmos-control-feature-sets/branches/main/monitoring/#ncreceivermonitor))
 * Finding all sender monitor objects inside a device model ([BCP-008-02](https://specs.amwa.tv/bcp-008-02/releases/v1.0.0/docs/Overview.html) and [NcSenderMonitor](https://specs.amwa.tv/nmos-control-feature-sets/branches/main/monitoring/#ncsendermonitor))
+* Finding a particular object by its role path to retrieve its oid (using FindMembersByPath in [NcBlock](https://specs.amwa.tv/ms-05-02/branches/v1.0.x/docs/Framework.html#ncblock))
 
 ## To do
 
 The following features are planned:
 
-* Showing how to find a particular object by its role path so we can retrieve its oid (using FindMembersByPath in [NcBlock](https://specs.amwa.tv/ms-05-02/branches/v1.0.x/docs/Framework.html#ncblock))
 * Showing how to retrieve the descriptor of any class so we can consume it generically (using GetControlClass in [NcClassManager](https://specs.amwa.tv/ms-05-02/branches/v1.0.x/docs/Framework.html#ncclassmanager))
 * Showing how to retrieve the descriptor of any datatype so we can consume it generically (using GetDatatype in [NcClassManager](https://specs.amwa.tv/ms-05-02/branches/v1.0.x/docs/Framework.html#ncclassmanager))
 
