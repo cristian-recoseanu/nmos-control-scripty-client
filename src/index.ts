@@ -21,8 +21,8 @@ async function main() {
     let client: WebSocketClient | null = null;
     try {
         var deviceIs04Address = "127.0.0.1";
-        var deviceIs04Port = 3000;
-        var is04DeviceId = "67c25159-ce25-4000-a66c-f31fff890265";
+        var deviceIs04Port = 8080;
+        var is04DeviceId = "c1fe9ed2-7602-43c3-a94d-eadd5338b9cd";
         var is04Version = "v1.3";
 
         var is04Url = `http://${deviceIs04Address}:${deviceIs04Port}/x-nmos/node/${is04Version}/devices/${is04DeviceId}`;
@@ -123,6 +123,57 @@ async function main() {
                     member.oid, { level: 1, index: 1 }, { id: { level: 4, index: 11 } }
                 );
                 console.log('✅ Received stream status for receiver monitor: ', getReceiverMonitorStreamStatus.value);
+            }
+        }
+
+        console.log('\n📝 Find all NcSenderMonitor [1.2.2.2] members');
+        const getSenderMonitors = await client.sendCommand<NcMethodResultBlockMemberDescriptors>(1, { level: 2, index: 4 }, { classId: [1, 2, 2, 2], includeDerived: true, recurse: true });
+
+        console.log(`✅ Found: ${getSenderMonitors.value.length} sender monitors`);
+        getSenderMonitors.value.forEach(member => {
+            console.log(`\t• Sender monitor - oid: ${member.oid}, role: ${member.role}, userLabel: ${member.userLabel}`);
+        });
+
+        if(getSenderMonitors.value.length > 0)
+        {
+            subscriptions = subscriptions.concat(getSenderMonitors.value.map(m => m.oid));
+
+            console.log('\n📝 Subscribe to all sender monitor oids');
+            await client.sendSubscriptions<number[]>(subscriptions);
+            console.log('✅ Subscribed to root object, receiver monitors, and sender monitors');
+        }
+
+        for (const member of getSenderMonitors.value) {
+            if (client !== null) {
+                console.log(`\n📝 Get overall status for sender monitor - oid: ${member.oid}, role: ${member.role}`);
+                const getSenderMonitorOverallStatus = await client.sendCommand<NcMethodResultNumber>(
+                    member.oid, { level: 1, index: 1 }, { id: { level: 3, index: 1 } }
+                );
+                console.log('✅ Received overall status for sender monitor: ', getSenderMonitorOverallStatus.value);
+
+                console.log(`\n📝 Get link status for sender monitor - oid: ${member.oid}, role: ${member.role}`);
+                const getSenderMonitorLinkStatus = await client.sendCommand<NcMethodResultNumber>(
+                    member.oid, { level: 1, index: 1 }, { id: { level: 4, index: 1 } }
+                );
+                console.log('✅ Received link status for sender monitor: ', getSenderMonitorLinkStatus.value);
+
+                console.log(`\n📝 Get transmission status for sender monitor - oid: ${member.oid}, role: ${member.role}`);
+                const getSenderMonitorTransmissionStatus = await client.sendCommand<NcMethodResultNumber>(
+                    member.oid, { level: 1, index: 1 }, { id: { level: 4, index: 4 } }
+                );
+                console.log('✅ Received transmission status for sender monitor: ', getSenderMonitorTransmissionStatus.value);
+
+                console.log(`\n📝 Get sync status for sender monitor - oid: ${member.oid}, role: ${member.role}`);
+                const getSenderMonitorSyncStatus = await client.sendCommand<NcMethodResultNumber>(
+                    member.oid, { level: 1, index: 1 }, { id: { level: 4, index: 7 } }
+                );
+                console.log('✅ Received sync status for sender monitor: ', getSenderMonitorSyncStatus.value);
+
+                console.log(`\n📝 Get essence status for sender monitor - oid: ${member.oid}, role: ${member.role}`);
+                const getSenderMonitorEssenceStatus = await client.sendCommand<NcMethodResultNumber>(
+                    member.oid, { level: 1, index: 1 }, { id: { level: 4, index: 11 } }
+                );
+                console.log('✅ Received essence status for sender monitor: ', getSenderMonitorEssenceStatus.value);
             }
         }
 
