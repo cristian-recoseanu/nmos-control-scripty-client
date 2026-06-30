@@ -101,6 +101,34 @@ export interface NcMethodResultClassDescriptor extends NcMethodResult {
     value: NcClassDescriptor;
 }
 
+export interface NcEnumItemDescriptor {
+    description: string | null;
+    name: string;
+    value: number;
+}
+
+export enum NcDatatypeType {
+    Primitive = 0,
+    Typedef = 1,
+    Struct = 2,
+    Enum = 3,
+}
+
+export function ncDatatypeTypeToString(type: number): string {
+    return NcDatatypeType[type] ?? 'Unknown';
+}
+
+export interface NcDatatypeDescriptor {
+    description: string | null;
+    name: string;
+    type: number;
+    items?: NcEnumItemDescriptor[];
+}
+
+export interface NcMethodResultDatatypeDescriptor extends NcMethodResult {
+    value: NcDatatypeDescriptor;
+}
+
 export interface Response {
     handle: number;
     result: NcMethodResult;

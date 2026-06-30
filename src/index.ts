@@ -12,7 +12,11 @@ import {
     NcMethodResultBlockMemberDescriptors,
     NcMethodResultNumber,
     NcMethodResultClassDescriptor,
-    NcClassDescriptor
+    NcClassDescriptor,
+    NcMethodResultDatatypeDescriptor,
+    NcDatatypeDescriptor,
+    NcDatatypeType,
+    ncDatatypeTypeToString
 } from './datatypes';
 
 
@@ -225,6 +229,17 @@ async function main() {
             logClassDescriptor('NcSenderMonitor', getSenderMonitorClass.value);
         }
 
+        if (getReceiverMonitors.value.length > 0 || getSenderMonitors.value.length > 0) {
+            const linkStatusDatatypeName = 'NcLinkStatus';
+            console.log('\n📝 Get NcLinkStatus enum datatype descriptor using GetDatatype on NcClassManager');
+            console.log(`\tClass manager oid: ${classManager.oid}`);
+            console.log(`\tDatatype name: ${linkStatusDatatypeName}, includeInherited: true`);
+            const getLinkStatusDatatype = await client.sendCommand<NcMethodResultDatatypeDescriptor>(
+                classManager.oid, { level: 3, index: 2 }, { name: linkStatusDatatypeName, includeInherited: true }
+            );
+            logDatatypeDescriptor(getLinkStatusDatatype.value);
+        }
+
         console.log("\n🎉 All commands completed successfully!");
         console.log("Waiting for notifications... (Press Ctrl+C to exit)");
         // Keep the process alive to receive notifications
@@ -254,6 +269,16 @@ async function main() {
         descriptor.events.forEach(e => {
             console.log(`\t\t• ${e.id.level}e${e.id.index} ${e.name} (${e.eventDatatype})`);
         });
+    }
+
+    function logDatatypeDescriptor(descriptor: NcDatatypeDescriptor): void {
+        console.log(`✅ Received ${descriptor.name} datatype descriptor - type: ${descriptor.type} (${ncDatatypeTypeToString(descriptor.type)})`);
+        if (descriptor.type === NcDatatypeType.Enum && descriptor.items) {
+            console.log(`\tEnum items (${descriptor.items.length}):`);
+            descriptor.items.forEach(item => {
+                console.log(`\t\t• ${item.name} = ${item.value}${item.description ? ` (${item.description})` : ''}`);
+            });
+        }
     }
 
     async function discoverDeviceModel(
