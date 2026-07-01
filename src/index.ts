@@ -11,7 +11,10 @@ import {
     NcMethodResultString,
     NcMethodResult,
     NcMethodResultBlockMemberDescriptors,
-    NcMethodResultNumber,
+    NcMethodResultValue,
+    NcMethodResultCounters,
+    NcCounter,
+    NcElementId,
     NcMethodResultClassDescriptor,
     NcClassDescriptor,
     NcMethodResultDatatypeDescriptor,
@@ -19,6 +22,46 @@ import {
     NcDatatypeType,
     ncDatatypeTypeToString
 } from './datatypes';
+
+const receiverMonitorProperties: { name: string; id: NcElementId }[] = [
+    { name: 'overallStatus', id: { level: 3, index: 1 } },
+    { name: 'overallStatusMessage', id: { level: 3, index: 2 } },
+    { name: 'statusReportingDelay', id: { level: 3, index: 3 } },
+    { name: 'linkStatus', id: { level: 4, index: 1 } },
+    { name: 'linkStatusMessage', id: { level: 4, index: 2 } },
+    { name: 'linkStatusTransitionCounter', id: { level: 4, index: 3 } },
+    { name: 'connectionStatus', id: { level: 4, index: 4 } },
+    { name: 'connectionStatusMessage', id: { level: 4, index: 5 } },
+    { name: 'connectionStatusTransitionCounter', id: { level: 4, index: 6 } },
+    { name: 'externalSynchronizationStatus', id: { level: 4, index: 7 } },
+    { name: 'externalSynchronizationStatusMessage', id: { level: 4, index: 8 } },
+    { name: 'externalSynchronizationStatusTransitionCounter', id: { level: 4, index: 9 } },
+    { name: 'synchronizationSourceId', id: { level: 4, index: 10 } },
+    { name: 'streamStatus', id: { level: 4, index: 11 } },
+    { name: 'streamStatusMessage', id: { level: 4, index: 12 } },
+    { name: 'streamStatusTransitionCounter', id: { level: 4, index: 13 } },
+    { name: 'autoResetCountersAndMessages', id: { level: 4, index: 14 } },
+];
+
+const senderMonitorProperties: { name: string; id: NcElementId }[] = [
+    { name: 'overallStatus', id: { level: 3, index: 1 } },
+    { name: 'overallStatusMessage', id: { level: 3, index: 2 } },
+    { name: 'statusReportingDelay', id: { level: 3, index: 3 } },
+    { name: 'linkStatus', id: { level: 4, index: 1 } },
+    { name: 'linkStatusMessage', id: { level: 4, index: 2 } },
+    { name: 'linkStatusTransitionCounter', id: { level: 4, index: 3 } },
+    { name: 'transmissionStatus', id: { level: 4, index: 4 } },
+    { name: 'transmissionStatusMessage', id: { level: 4, index: 5 } },
+    { name: 'transmissionStatusTransitionCounter', id: { level: 4, index: 6 } },
+    { name: 'externalSynchronizationStatus', id: { level: 4, index: 7 } },
+    { name: 'externalSynchronizationStatusMessage', id: { level: 4, index: 8 } },
+    { name: 'externalSynchronizationStatusTransitionCounter', id: { level: 4, index: 9 } },
+    { name: 'synchronizationSourceId', id: { level: 4, index: 10 } },
+    { name: 'essenceStatus', id: { level: 4, index: 11 } },
+    { name: 'essenceStatusMessage', id: { level: 4, index: 12 } },
+    { name: 'essenceStatusTransitionCounter', id: { level: 4, index: 13 } },
+    { name: 'autoResetCountersAndMessages', id: { level: 4, index: 14 } },
+];
 
 
 /**
@@ -98,35 +141,27 @@ async function main() {
 
         for (const member of getReceiverMonitors.value) {
             if (client !== null) {
-                console.log(`\n📝 Get overall status for receiver monitor - oid: ${member.oid}, role: ${member.role}`);
-                const getReceiverMonitorOverallStatus = await client.sendCommand<NcMethodResultNumber>(
-                    member.oid, { level: 1, index: 1 }, { id: { level: 3, index: 1 } }
-                );
-                console.log('✅ Received overall status for receiver monitor: ', getReceiverMonitorOverallStatus.value);
+                for (const property of receiverMonitorProperties) {
+                    console.log(`\n📝 Get ${property.name} for receiver monitor - oid: ${member.oid}, role: ${member.role}`);
+                    const result = await client.sendCommand<NcMethodResultValue>(
+                        member.oid, { level: 1, index: 1 }, { id: property.id }
+                    );
+                    console.log(`✅ Received ${property.name} for receiver monitor: `, result.value);
+                }
 
-                console.log(`\n📝 Get link status for receiver monitor - oid: ${member.oid}, role: ${member.role}`);
-                const getReceiverMonitorLinkStatus = await client.sendCommand<NcMethodResultNumber>(
-                    member.oid, { level: 1, index: 1 }, { id: { level: 4, index: 1 } }
+                console.log(`\n📝 GetLostPacketCounters for receiver monitor - oid: ${member.oid}, role: ${member.role}`);
+                const getLostPacketCounters = await client.sendCommand<NcMethodResultCounters>(
+                    member.oid, { level: 4, index: 1 }, {}
                 );
-                console.log('✅ Received link status for receiver monitor: ', getReceiverMonitorLinkStatus.value);
+                console.log('✅ Received lost packet counters for receiver monitor:');
+                logCounters(getLostPacketCounters.value);
 
-                console.log(`\n📝 Get connection status for receiver monitor - oid: ${member.oid}, role: ${member.role}`);
-                const getReceiverMonitorConnectionStatus = await client.sendCommand<NcMethodResultNumber>(
-                    member.oid, { level: 1, index: 1 }, { id: { level: 4, index: 4 } }
+                console.log(`\n📝 GetLatePacketCounters for receiver monitor - oid: ${member.oid}, role: ${member.role}`);
+                const getLatePacketCounters = await client.sendCommand<NcMethodResultCounters>(
+                    member.oid, { level: 4, index: 2 }, {}
                 );
-                console.log('✅ Received connection status for receiver monitor: ', getReceiverMonitorConnectionStatus.value);
-
-                console.log(`\n📝 Get sync status for receiver monitor - oid: ${member.oid}, role: ${member.role}`);
-                const getReceiverMonitorSyncStatus = await client.sendCommand<NcMethodResultNumber>(
-                    member.oid, { level: 1, index: 1 }, { id: { level: 4, index: 7 } }
-                );
-                console.log('✅ Received sync status for receiver monitor: ', getReceiverMonitorSyncStatus.value);
-
-                console.log(`\n📝 Get stream status for receiver monitor - oid: ${member.oid}, role: ${member.role}`);
-                const getReceiverMonitorStreamStatus = await client.sendCommand<NcMethodResultNumber>(
-                    member.oid, { level: 1, index: 1 }, { id: { level: 4, index: 11 } }
-                );
-                console.log('✅ Received stream status for receiver monitor: ', getReceiverMonitorStreamStatus.value);
+                console.log('✅ Received late packet counters for receiver monitor:');
+                logCounters(getLatePacketCounters.value);
             }
         }
 
@@ -149,35 +184,20 @@ async function main() {
 
         for (const member of getSenderMonitors.value) {
             if (client !== null) {
-                console.log(`\n📝 Get overall status for sender monitor - oid: ${member.oid}, role: ${member.role}`);
-                const getSenderMonitorOverallStatus = await client.sendCommand<NcMethodResultNumber>(
-                    member.oid, { level: 1, index: 1 }, { id: { level: 3, index: 1 } }
-                );
-                console.log('✅ Received overall status for sender monitor: ', getSenderMonitorOverallStatus.value);
+                for (const property of senderMonitorProperties) {
+                    console.log(`\n📝 Get ${property.name} for sender monitor - oid: ${member.oid}, role: ${member.role}`);
+                    const result = await client.sendCommand<NcMethodResultValue>(
+                        member.oid, { level: 1, index: 1 }, { id: property.id }
+                    );
+                    console.log(`✅ Received ${property.name} for sender monitor: `, result.value);
+                }
 
-                console.log(`\n📝 Get link status for sender monitor - oid: ${member.oid}, role: ${member.role}`);
-                const getSenderMonitorLinkStatus = await client.sendCommand<NcMethodResultNumber>(
-                    member.oid, { level: 1, index: 1 }, { id: { level: 4, index: 1 } }
+                console.log(`\n📝 GetTransmissionErrorCounters for sender monitor - oid: ${member.oid}, role: ${member.role}`);
+                const getTransmissionErrorCounters = await client.sendCommand<NcMethodResultCounters>(
+                    member.oid, { level: 4, index: 1 }, {}
                 );
-                console.log('✅ Received link status for sender monitor: ', getSenderMonitorLinkStatus.value);
-
-                console.log(`\n📝 Get transmission status for sender monitor - oid: ${member.oid}, role: ${member.role}`);
-                const getSenderMonitorTransmissionStatus = await client.sendCommand<NcMethodResultNumber>(
-                    member.oid, { level: 1, index: 1 }, { id: { level: 4, index: 4 } }
-                );
-                console.log('✅ Received transmission status for sender monitor: ', getSenderMonitorTransmissionStatus.value);
-
-                console.log(`\n📝 Get sync status for sender monitor - oid: ${member.oid}, role: ${member.role}`);
-                const getSenderMonitorSyncStatus = await client.sendCommand<NcMethodResultNumber>(
-                    member.oid, { level: 1, index: 1 }, { id: { level: 4, index: 7 } }
-                );
-                console.log('✅ Received sync status for sender monitor: ', getSenderMonitorSyncStatus.value);
-
-                console.log(`\n📝 Get essence status for sender monitor - oid: ${member.oid}, role: ${member.role}`);
-                const getSenderMonitorEssenceStatus = await client.sendCommand<NcMethodResultNumber>(
-                    member.oid, { level: 1, index: 1 }, { id: { level: 4, index: 11 } }
-                );
-                console.log('✅ Received essence status for sender monitor: ', getSenderMonitorEssenceStatus.value);
+                console.log('✅ Received transmission error counters for sender monitor:');
+                logCounters(getTransmissionErrorCounters.value);
             }
         }
 
@@ -251,6 +271,16 @@ async function main() {
             console.log("Closing WebSocket connection.");
             client.close();
         }
+    }
+
+    function logCounters(counters: NcCounter[]): void {
+        if (counters.length === 0) {
+            console.log('\t(no counters)');
+            return;
+        }
+        counters.forEach(counter => {
+            console.log(`\t• ${counter.name}: ${counter.value}${counter.description ? ` (${counter.description})` : ''}`);
+        });
     }
 
     function logClassDescriptor(className: string, descriptor: NcClassDescriptor): void {
