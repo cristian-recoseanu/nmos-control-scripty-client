@@ -3,6 +3,16 @@
 import axios from 'axios';
 
 import { loadDeviceConfig } from './config';
+import {
+    logSection,
+    logSubsection,
+    logStep,
+    logSuccess,
+    logInfo,
+    logCounters,
+    logClassDescriptor,
+    logDatatypeDescriptor,
+} from './logging';
 import { WebSocketClient } from './websocket';
 
 import {
@@ -13,14 +23,9 @@ import {
     NcMethodResultBlockMemberDescriptors,
     NcMethodResultValue,
     NcMethodResultCounters,
-    NcCounter,
     NcElementId,
     NcMethodResultClassDescriptor,
-    NcClassDescriptor,
     NcMethodResultDatatypeDescriptor,
-    NcDatatypeDescriptor,
-    NcDatatypeType,
-    ncDatatypeTypeToString
 } from './datatypes';
 
 const receiverMonitorProperties: { name: string; id: NcElementId }[] = [
@@ -76,144 +81,159 @@ async function main() {
 
         var ncpControlType = 'urn:x-nmos:control:ncp/v1.0';
 
-        // --- 1. Find IS-12 control endpoint ---
-        console.log(`Fetching IS-04 device resource from: ${is04Url}`);
+        logSection('IS-04 device lookup');
+        logStep(`Fetching device resource from ${is04Url}`);
         const { data: apiResponse } = await axios.get<QueryApiResponse>(is04Url);
         const websocketControl = apiResponse.controls.find(c => c.type === ncpControlType);
         if (!websocketControl?.href) {
             throw new Error(`Could not find a control with type '${ncpControlType}'.`);
         }
-        console.log(`✅ Found WebSocket URL: ${websocketControl.href}`);
+        logSuccess(`Found WebSocket URL: ${websocketControl.href}`);
 
-        // --- 2. Create client and set up event listener ---
+        logSection('WebSocket connection');
         client = new WebSocketClient();
 
-        // Set up the listener for spontaneous notifications
         client.on('notification', (notification: WebSocketNotificationMsg) => {
-            console.log(`\t🔔 Notification received: ${JSON.stringify(notification)}`);
+            logSubsection('Notification received');
+            logInfo(JSON.stringify(notification));
             notification.notifications.forEach(n => {
-                console.log(`\t\t• Oid: ${n.oid}, PropertyId: ${n.eventData.propertyId.level}p${n.eventData.propertyId.index}, Value: ${n.eventData.value}, SequenceItemIndex: ${n.eventData.sequenceItemIndex}`);
+                logInfo(`• Oid: ${n.oid}, PropertyId: ${n.eventData.propertyId.level}p${n.eventData.propertyId.index}, Value: ${n.eventData.value}, SequenceItemIndex: ${n.eventData.sequenceItemIndex}`);
             });
         });
 
-        // --- 3. Connect to WebSocket href ---
         await client.connect(websocketControl.href);
 
-        // --- 4. Send commands ---
-        console.log('\n📝 Get root user label');
+        logSection('Root object');
+        logSubsection('User label');
+        logStep('Get root user label');
         const getUserLabelCmdResult1 = await client.sendCommand<NcMethodResultString>(1, { level: 1, index: 1 }, { id: { level: 1, index: 6 } });
-        console.log('✅ Received root user label:', getUserLabelCmdResult1.value);
+        logSuccess('Root user label:', getUserLabelCmdResult1.value);
 
         var subscriptions: number[] = [ 1 ];
 
-        console.log('\n📝 Subscribe to root object oid 1');
+        logSubsection('Subscriptions');
+        logStep('Subscribe to root object oid 1');
         await client.sendSubscriptions<number[]>(subscriptions);
-        console.log('✅ Subscribed to root object oid of 1');
+        logSuccess('Subscribed to root object oid 1');
 
         var newLabel = "ABC XYZ";
         if(getUserLabelCmdResult1.value === newLabel)
             newLabel = "XYZ ABC";
 
-        console.log('\n📝 Set root user label to:', newLabel);
+        logStep(`Set root user label to "${newLabel}"`);
         await client.sendCommand<NcMethodResult>(1, { level: 1, index: 2 }, { id: { level: 1, index: 6 }, value: newLabel });
-        console.log('✅ Successfully set root user label to:', newLabel);
+        logSuccess(`Root user label set to "${newLabel}"`);
 
-        console.log('\n📝 Get root user label after update');
+        logStep('Get root user label after update');
         const getUserLabelCmdResult2 = await client.sendCommand<NcMethodResultString>(1, { level: 1, index: 1 }, { id: { level: 1, index: 6 } });
-        console.log('✅ Received new root user label:', getUserLabelCmdResult2.value);
+        logSuccess('Root user label:', getUserLabelCmdResult2.value);
 
-        console.log('\n📝 Find all NcReceiverMonitor [1.2.2.1] members');
+        logSection('Receiver monitors');
+        logSubsection('Discovery');
+        logStep('Find all NcReceiverMonitor [1.2.2.1] members');
         const getReceiverMonitors = await client.sendCommand<NcMethodResultBlockMemberDescriptors>(1, { level: 2, index: 4 }, { classId: [1, 2, 2, 1], includeDerived: true, recurse: true });
-        
-        console.log(`✅ Found: ${getReceiverMonitors.value.length} receiver monitors`);
+
+        logSuccess(`Found ${getReceiverMonitors.value.length} receiver monitor(s)`);
         getReceiverMonitors.value.forEach(member => {
-            console.log(`\t• Receiver monitor - oid: ${member.oid}, role: ${member.role}, userLabel: ${member.userLabel}`);
+            logInfo(`• oid: ${member.oid}, role: ${member.role}, userLabel: ${member.userLabel}`);
         });
 
         if(getReceiverMonitors.value.length > 0)
         {
             subscriptions = subscriptions.concat(getReceiverMonitors.value.map(m => m.oid));
 
-            console.log('\n📝 Subscribe to all receiver monitor oids');
+            logSubsection('Subscriptions');
+            logStep('Subscribe to all receiver monitor oids');
             await client.sendSubscriptions<number[]>(subscriptions);
-            console.log('✅ Subscribed to root object and all receiver monitors');
+            logSuccess('Subscribed to root object and all receiver monitors');
         }
 
-        for (const member of getReceiverMonitors.value) {
+        for (let i = 0; i < getReceiverMonitors.value.length; i++) {
+            const member = getReceiverMonitors.value[i];
             if (client !== null) {
+                logSubsection(`Receiver monitor [${i + 1}/${getReceiverMonitors.value.length}] — oid: ${member.oid}, role: ${member.role}`);
+
                 for (const property of receiverMonitorProperties) {
-                    console.log(`\n📝 Get ${property.name} for receiver monitor - oid: ${member.oid}, role: ${member.role}`);
+                    logStep(`Get ${property.name}`);
                     const result = await client.sendCommand<NcMethodResultValue>(
                         member.oid, { level: 1, index: 1 }, { id: property.id }
                     );
-                    console.log(`✅ Received ${property.name} for receiver monitor: `, result.value);
+                    logSuccess(`${property.name}:`, result.value);
                 }
 
-                console.log(`\n📝 GetLostPacketCounters for receiver monitor - oid: ${member.oid}, role: ${member.role}`);
+                logStep('GetLostPacketCounters');
                 const getLostPacketCounters = await client.sendCommand<NcMethodResultCounters>(
                     member.oid, { level: 4, index: 1 }, {}
                 );
-                console.log('✅ Received lost packet counters for receiver monitor:');
+                logSuccess('Lost packet counters:');
                 logCounters(getLostPacketCounters.value);
 
-                console.log(`\n📝 GetLatePacketCounters for receiver monitor - oid: ${member.oid}, role: ${member.role}`);
+                logStep('GetLatePacketCounters');
                 const getLatePacketCounters = await client.sendCommand<NcMethodResultCounters>(
                     member.oid, { level: 4, index: 2 }, {}
                 );
-                console.log('✅ Received late packet counters for receiver monitor:');
+                logSuccess('Late packet counters:');
                 logCounters(getLatePacketCounters.value);
             }
         }
 
-        console.log('\n📝 Find all NcSenderMonitor [1.2.2.2] members');
+        logSection('Sender monitors');
+        logSubsection('Discovery');
+        logStep('Find all NcSenderMonitor [1.2.2.2] members');
         const getSenderMonitors = await client.sendCommand<NcMethodResultBlockMemberDescriptors>(1, { level: 2, index: 4 }, { classId: [1, 2, 2, 2], includeDerived: true, recurse: true });
 
-        console.log(`✅ Found: ${getSenderMonitors.value.length} sender monitors`);
+        logSuccess(`Found ${getSenderMonitors.value.length} sender monitor(s)`);
         getSenderMonitors.value.forEach(member => {
-            console.log(`\t• Sender monitor - oid: ${member.oid}, role: ${member.role}, userLabel: ${member.userLabel}`);
+            logInfo(`• oid: ${member.oid}, role: ${member.role}, userLabel: ${member.userLabel}`);
         });
 
         if(getSenderMonitors.value.length > 0)
         {
             subscriptions = subscriptions.concat(getSenderMonitors.value.map(m => m.oid));
 
-            console.log('\n📝 Subscribe to all sender monitor oids');
+            logSubsection('Subscriptions');
+            logStep('Subscribe to all sender monitor oids');
             await client.sendSubscriptions<number[]>(subscriptions);
-            console.log('✅ Subscribed to root object, receiver monitors, and sender monitors');
+            logSuccess('Subscribed to root object, receiver monitors, and sender monitors');
         }
 
-        for (const member of getSenderMonitors.value) {
+        for (let i = 0; i < getSenderMonitors.value.length; i++) {
+            const member = getSenderMonitors.value[i];
             if (client !== null) {
+                logSubsection(`Sender monitor [${i + 1}/${getSenderMonitors.value.length}] — oid: ${member.oid}, role: ${member.role}`);
+
                 for (const property of senderMonitorProperties) {
-                    console.log(`\n📝 Get ${property.name} for sender monitor - oid: ${member.oid}, role: ${member.role}`);
+                    logStep(`Get ${property.name}`);
                     const result = await client.sendCommand<NcMethodResultValue>(
                         member.oid, { level: 1, index: 1 }, { id: property.id }
                     );
-                    console.log(`✅ Received ${property.name} for sender monitor: `, result.value);
+                    logSuccess(`${property.name}:`, result.value);
                 }
 
-                console.log(`\n📝 GetTransmissionErrorCounters for sender monitor - oid: ${member.oid}, role: ${member.role}`);
+                logStep('GetTransmissionErrorCounters');
                 const getTransmissionErrorCounters = await client.sendCommand<NcMethodResultCounters>(
                     member.oid, { level: 4, index: 1 }, {}
                 );
-                console.log('✅ Received transmission error counters for sender monitor:');
+                logSuccess('Transmission error counters:');
                 logCounters(getTransmissionErrorCounters.value);
             }
         }
 
-        console.log('\n📝 Discover the entire device model recursively starting from the root block with oid: 1');
+        logSection('Device model discovery');
+        logStep('Discover the entire device model recursively from root block oid 1');
         await discoverDeviceModel(client);
 
+        logSection('Class manager');
         const rootBlockOid = 1;
         const rootBlockRole = 'root';
         const classManagerRole = 'ClassManager';
         const classManagerRolePath = [rootBlockRole, classManagerRole];
         const classManagerRelativePath = [classManagerRole];
 
-        console.log('\n📝 Find NcClassManager [1.3.2] using FindMembersByPath on the root block');
-        console.log(`\tRoot block - oid: ${rootBlockOid}, role: "${rootBlockRole}"`);
-        console.log(`\tFull role path: ${JSON.stringify(classManagerRolePath)}`);
-        console.log(`\tRelative path argument (excludes the root block role): ${JSON.stringify(classManagerRelativePath)}`);
+        logStep('Find NcClassManager [1.3.2] using FindMembersByPath on the root block');
+        logInfo(`Root block — oid: ${rootBlockOid}, role: "${rootBlockRole}"`);
+        logInfo(`Full role path: ${JSON.stringify(classManagerRolePath)}`);
+        logInfo(`Relative path argument: ${JSON.stringify(classManagerRelativePath)}`);
         const getClassManagerByPath = await client.sendCommand<NcMethodResultBlockMemberDescriptors>(
             rootBlockOid, { level: 2, index: 2 }, { path: classManagerRelativePath }
         );
@@ -223,13 +243,16 @@ async function main() {
         }
 
         const classManager = getClassManagerByPath.value[0];
-        console.log(`✅ Found NcClassManager - oid: ${classManager.oid}, role: ${classManager.role}, classId: ${classManager.classId.join('.')}, userLabel: ${classManager.userLabel}`);
+        logSuccess(`Found NcClassManager — oid: ${classManager.oid}, role: ${classManager.role}, classId: ${classManager.classId.join('.')}, userLabel: ${classManager.userLabel}`);
+
+        logSection('Class and datatype descriptors');
 
         if (getReceiverMonitors.value.length > 0) {
+            logSubsection('NcReceiverMonitor class descriptor');
             const receiverMonitorClassId = [1, 2, 2, 1];
-            console.log('\n📝 Get NcReceiverMonitor class descriptor using GetControlClass on NcClassManager');
-            console.log(`\tClass manager oid: ${classManager.oid}`);
-            console.log(`\tClass id: ${JSON.stringify(receiverMonitorClassId)}, includeInherited: true`);
+            logStep('GetControlClass');
+            logInfo(`Class manager oid: ${classManager.oid}`);
+            logInfo(`Class id: ${JSON.stringify(receiverMonitorClassId)}, includeInherited: true`);
             const getReceiverMonitorClass = await client.sendCommand<NcMethodResultClassDescriptor>(
                 classManager.oid, { level: 3, index: 1 }, { classId: receiverMonitorClassId, includeInherited: true }
             );
@@ -237,10 +260,11 @@ async function main() {
         }
 
         if (getSenderMonitors.value.length > 0) {
+            logSubsection('NcSenderMonitor class descriptor');
             const senderMonitorClassId = [1, 2, 2, 2];
-            console.log('\n📝 Get NcSenderMonitor class descriptor using GetControlClass on NcClassManager');
-            console.log(`\tClass manager oid: ${classManager.oid}`);
-            console.log(`\tClass id: ${JSON.stringify(senderMonitorClassId)}, includeInherited: true`);
+            logStep('GetControlClass');
+            logInfo(`Class manager oid: ${classManager.oid}`);
+            logInfo(`Class id: ${JSON.stringify(senderMonitorClassId)}, includeInherited: true`);
             const getSenderMonitorClass = await client.sendCommand<NcMethodResultClassDescriptor>(
                 classManager.oid, { level: 3, index: 1 }, { classId: senderMonitorClassId, includeInherited: true }
             );
@@ -248,64 +272,27 @@ async function main() {
         }
 
         if (getReceiverMonitors.value.length > 0 || getSenderMonitors.value.length > 0) {
+            logSubsection('NcLinkStatus datatype descriptor');
             const linkStatusDatatypeName = 'NcLinkStatus';
-            console.log('\n📝 Get NcLinkStatus enum datatype descriptor using GetDatatype on NcClassManager');
-            console.log(`\tClass manager oid: ${classManager.oid}`);
-            console.log(`\tDatatype name: ${linkStatusDatatypeName}, includeInherited: true`);
+            logStep('GetDatatype');
+            logInfo(`Class manager oid: ${classManager.oid}`);
+            logInfo(`Datatype name: ${linkStatusDatatypeName}, includeInherited: true`);
             const getLinkStatusDatatype = await client.sendCommand<NcMethodResultDatatypeDescriptor>(
                 classManager.oid, { level: 3, index: 2 }, { name: linkStatusDatatypeName, includeInherited: true }
             );
             logDatatypeDescriptor(getLinkStatusDatatype.value);
         }
 
-        console.log("\n🎉 All commands completed successfully!");
-        console.log("Waiting for notifications... (Press Ctrl+C to exit)");
-        // Keep the process alive to receive notifications
-        // In a real app, this would be part of a larger application loop.
-        // For this script, we'll just wait indefinitely.
+        logSection('Complete');
+        logSuccess('All commands completed successfully');
+        logInfo('Waiting for notifications... (Press Ctrl+C to exit)');
         await new Promise(() => {}); // never resolves, hangs forever
     } catch (error) {
         console.error('❌ An error occurred in the main workflow:', (error as Error).message);
     } finally {
         if (client) {
-            console.log("Closing WebSocket connection.");
+            logInfo('Closing WebSocket connection.');
             client.close();
-        }
-    }
-
-    function logCounters(counters: NcCounter[]): void {
-        if (counters.length === 0) {
-            console.log('\t(no counters)');
-            return;
-        }
-        counters.forEach(counter => {
-            console.log(`\t• ${counter.name}: ${counter.value}${counter.description ? ` (${counter.description})` : ''}`);
-        });
-    }
-
-    function logClassDescriptor(className: string, descriptor: NcClassDescriptor): void {
-        console.log(`✅ Received ${className} class descriptor - name: ${descriptor.name}, classId: ${descriptor.classId.join('.')}`);
-        console.log(`\tProperties (${descriptor.properties.length}):`);
-        descriptor.properties.forEach(p => {
-            console.log(`\t\t• ${p.id.level}p${p.id.index} ${p.name} (${p.typeName})${p.isReadOnly ? ', readonly' : ''}`);
-        });
-        console.log(`\tMethods (${descriptor.methods.length}):`);
-        descriptor.methods.forEach(m => {
-            console.log(`\t\t• ${m.id.level}m${m.id.index} ${m.name} -> ${m.resultDatatype}`);
-        });
-        console.log(`\tEvents (${descriptor.events.length}):`);
-        descriptor.events.forEach(e => {
-            console.log(`\t\t• ${e.id.level}e${e.id.index} ${e.name} (${e.eventDatatype})`);
-        });
-    }
-
-    function logDatatypeDescriptor(descriptor: NcDatatypeDescriptor): void {
-        console.log(`✅ Received ${descriptor.name} datatype descriptor - type: ${descriptor.type} (${ncDatatypeTypeToString(descriptor.type)})`);
-        if (descriptor.type === NcDatatypeType.Enum && descriptor.items) {
-            console.log(`\tEnum items (${descriptor.items.length}):`);
-            descriptor.items.forEach(item => {
-                console.log(`\t\t• ${item.name} = ${item.value}${item.description ? ` (${item.description})` : ''}`);
-            });
         }
     }
 
@@ -314,29 +301,23 @@ async function main() {
         oid: number = 1,
         depth: number = 0
     ): Promise<void> {
-        const indent = '\t'.repeat(depth);
-        
+        const indent = '    ' + '  '.repeat(depth);
+
         try {
             const result = await client.sendCommand<NcMethodResultBlockMemberDescriptors>(
-                oid, 
-                { level: 2, index: 1 }, 
+                oid,
+                { level: 2, index: 1 },
                 { recurse: false }
             );
-            
+
             for (const member of result.value) {
                 if(member.classId.join('.') == '1.1')
                 {
-                    console.log(
-                        `${indent}• Block Member - oid: ${member.oid}, role: ${member.role}, classId: ${member.classId.join('.')}, finding members`
-                    );
-
-                    // Recursively discover its members
+                    logInfo(`${indent}• Block — oid: ${member.oid}, role: ${member.role}, classId: ${member.classId.join('.')}`);
                     await discoverDeviceModel(client, member.oid, depth + 1);
                 }
                 else
-                    console.log(
-                        `${indent}• Member - oid: ${member.oid}, role: ${member.role}, classId: ${member.classId.join('.')}`
-                    );
+                    logInfo(`${indent}• Member — oid: ${member.oid}, role: ${member.role}, classId: ${member.classId.join('.')}`);
             }
         } catch (error) {
             console.error(`${indent}Error discovering members for oid ${oid}:`, error);
