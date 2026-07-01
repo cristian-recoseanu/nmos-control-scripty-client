@@ -2,6 +2,7 @@
 
 import axios from 'axios';
 
+import { loadDeviceConfig } from './config';
 import { WebSocketClient } from './websocket';
 
 import {
@@ -26,10 +27,7 @@ import {
 async function main() {
     let client: WebSocketClient | null = null;
     try {
-        var deviceIs04Address = "127.0.0.1";
-        var deviceIs04Port = 8080;
-        var is04DeviceId = "c1fe9ed2-7602-43c3-a94d-eadd5338b9cd";
-        var is04Version = "v1.3";
+        const { deviceIs04Address, deviceIs04Port, is04DeviceId, is04Version } = loadDeviceConfig();
 
         var is04Url = `http://${deviceIs04Address}:${deviceIs04Port}/x-nmos/node/${is04Version}/devices/${is04DeviceId}`;
 
