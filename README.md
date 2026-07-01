@@ -12,13 +12,26 @@ Install dependencies
 npm install
 ```
 
-Update initial variables with your target device so it can find the IS-12 control endpoint
-```typescript
-var deviceIs04Address = "127.0.0.1";
-var deviceIs04Port = 3000;
-var is04DeviceId = "67c25159-ce25-4000-a66c-f31fff890265";
-var is04Version = "v1.3";
+Configure the target device using command line arguments or environment variables. Command line arguments take precedence over environment variables. If neither is set, built-in defaults are used.
+
+```bash
+# Command line
+npm start -- --address 127.0.0.1 --port 8080 --device-id c1fe9ed2-7602-43c3-a94d-eadd5338b9cd --version v1.3
+
+# Environment variables
+export NMOS_IS04_ADDRESS=127.0.0.1
+export NMOS_IS04_PORT=8080
+export NMOS_IS04_DEVICE_ID=c1fe9ed2-7602-43c3-a94d-eadd5338b9cd
+export NMOS_IS04_VERSION=v1.3
+npm start
 ```
+
+| Option | Short | Environment variable | Default |
+| --- | --- | --- | --- |
+| `--address` | `-a` | `NMOS_IS04_ADDRESS` | `127.0.0.1` |
+| `--port` | `-p` | `NMOS_IS04_PORT` | `8080` |
+| `--device-id` | `-d` | `NMOS_IS04_DEVICE_ID` | `c1fe9ed2-7602-43c3-a94d-eadd5338b9cd` |
+| `--version` | `-v` | `NMOS_IS04_VERSION` | `v1.3` |
 
 Build
 ```
@@ -30,9 +43,9 @@ Run
 npm start
 ```
 
-## Working features
+## Features
 
-The following features are working:
+The following features have been implemented:
 
 * Finding the IS-12 control endpoint (`urn:x-nmos:control:ncp/v1.0`) inside an [IS-04 device](https://specs.amwa.tv/is-12/releases/v1.0.1/docs/IS-04_interactions.html) resource
 * Establishing a WebSocket connection to the IS-12 control endpoint for bidirectional communication
