@@ -46,6 +46,20 @@ export interface NcMethodResultNumber extends NcMethodResult {
     value: number;
 }
 
+export interface NcMethodResultValue extends NcMethodResult {
+    value: unknown;
+}
+
+export interface NcCounter {
+    name: string;
+    value: number;
+    description: string | null;
+}
+
+export interface NcMethodResultCounters extends NcMethodResult {
+    value: NcCounter[];
+}
+
 export interface NcBlockMemberDescriptor {
     role: string;
     oid: number;
