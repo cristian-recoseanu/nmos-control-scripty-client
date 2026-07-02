@@ -50,6 +50,17 @@ export interface NcMethodResultValue extends NcMethodResult {
     value: unknown;
 }
 
+export interface NcTouchpointResource {
+    resourceType: string;
+    id: string;
+    ioId?: string;
+}
+
+export interface NcTouchpoint {
+    contextNamespace: string;
+    resource?: NcTouchpointResource;
+}
+
 export interface NcCounter {
     name: string;
     value: number;

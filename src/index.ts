@@ -10,6 +10,7 @@ import {
     logSuccess,
     logInfo,
     logCounters,
+    logTouchpoints,
     logClassDescriptor,
     logDatatypeDescriptor,
 } from './logging';
@@ -67,6 +68,8 @@ const senderMonitorProperties: { name: string; id: NcElementId }[] = [
     { name: 'essenceStatusTransitionCounter', id: { level: 4, index: 13 } },
     { name: 'autoResetCountersAndMessages', id: { level: 4, index: 14 } },
 ];
+
+const touchpointsPropertyId: NcElementId = { level: 1, index: 7 };
 
 
 /**
@@ -153,6 +156,13 @@ async function main() {
             if (client !== null) {
                 logSubsection(`Receiver monitor [${i + 1}/${getReceiverMonitors.value.length}] — oid: ${member.oid}, role: ${member.role}`);
 
+                logStep('Get touchpoints');
+                const receiverTouchpoints = await client.sendCommand<NcMethodResultValue>(
+                    member.oid, { level: 1, index: 1 }, { id: touchpointsPropertyId }
+                );
+                logSuccess('Touchpoints:');
+                logTouchpoints(receiverTouchpoints.value);
+
                 for (const property of receiverMonitorProperties) {
                     logStep(`Get ${property.name}`);
                     const result = await client.sendCommand<NcMethodResultValue>(
@@ -201,6 +211,13 @@ async function main() {
             const member = getSenderMonitors.value[i];
             if (client !== null) {
                 logSubsection(`Sender monitor [${i + 1}/${getSenderMonitors.value.length}] — oid: ${member.oid}, role: ${member.role}`);
+
+                logStep('Get touchpoints');
+                const senderTouchpoints = await client.sendCommand<NcMethodResultValue>(
+                    member.oid, { level: 1, index: 1 }, { id: touchpointsPropertyId }
+                );
+                logSuccess('Touchpoints:');
+                logTouchpoints(senderTouchpoints.value);
 
                 for (const property of senderMonitorProperties) {
                     logStep(`Get ${property.name}`);
