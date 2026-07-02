@@ -3,6 +3,7 @@ import {
     NcCounter,
     NcDatatypeDescriptor,
     NcDatatypeType,
+    NcTouchpoint,
     ncDatatypeTypeToString,
 } from './datatypes';
 
@@ -41,6 +42,31 @@ export function logCounters(counters: NcCounter[]): void {
     }
     counters.forEach(counter => {
         logInfo(`• ${counter.name}: ${counter.value}${counter.description ? ` (${counter.description})` : ''}`);
+    });
+}
+
+export function logTouchpoints(touchpoints: unknown): void {
+    if (touchpoints === null || touchpoints === undefined) {
+        logInfo('(no touchpoints)');
+        return;
+    }
+    if (!Array.isArray(touchpoints)) {
+        logInfo(JSON.stringify(touchpoints));
+        return;
+    }
+    if (touchpoints.length === 0) {
+        logInfo('(empty touchpoints sequence)');
+        return;
+    }
+    touchpoints.forEach((touchpoint, index) => {
+        const tp = touchpoint as NcTouchpoint;
+        logInfo(`• Touchpoint [${index + 1}] — contextNamespace: ${tp.contextNamespace}`);
+        if (tp.resource) {
+            logInfo(`    resourceType: ${tp.resource.resourceType}, id: ${tp.resource.id}`);
+            if (tp.resource.ioId) {
+                logInfo(`    ioId: ${tp.resource.ioId}`);
+            }
+        }
     });
 }
 
