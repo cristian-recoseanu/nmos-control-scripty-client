@@ -3,6 +3,7 @@
 import axios from 'axios';
 
 import { loadDeviceConfig } from './config';
+import { runDeviceTreeExport } from './export';
 import {
     logSection,
     logSubsection,
@@ -76,9 +77,21 @@ const touchpointsPropertyId: NcElementId = { level: 1, index: 7 };
  * Main application function
  */
 async function main() {
+    const config = loadDeviceConfig();
+
+    if (config.exportDeviceTree) {
+        try {
+            await runDeviceTreeExport(config);
+        } catch (error) {
+            console.error('❌ An error occurred while exporting the device tree:', (error as Error).message);
+            process.exitCode = 1;
+        }
+        return;
+    }
+
     let client: WebSocketClient | null = null;
     try {
-        const { deviceIs04Address, deviceIs04Port, is04DeviceId, is04Version } = loadDeviceConfig();
+        const { deviceIs04Address, deviceIs04Port, is04DeviceId, is04Version } = config;
 
         var is04Url = `http://${deviceIs04Address}:${deviceIs04Port}/x-nmos/node/${is04Version}/devices/${is04DeviceId}`;
 

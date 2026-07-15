@@ -95,12 +95,20 @@ export interface NcPropertyDescriptor {
     isDeprecated: boolean;
 }
 
+export interface NcParameterDescriptor {
+    description: string | null;
+    name: string;
+    typeName: string | null;
+    isNullable: boolean;
+    isSequence: boolean;
+}
+
 export interface NcMethodDescriptor {
     description: string | null;
     id: NcElementId;
     name: string;
     resultDatatype: string;
-    parameters: unknown[];
+    parameters: NcParameterDescriptor[];
     isDeprecated: boolean;
 }
 
@@ -132,6 +140,14 @@ export interface NcEnumItemDescriptor {
     value: number;
 }
 
+export interface NcFieldDescriptor {
+    description: string | null;
+    name: string;
+    typeName: string | null;
+    isNullable: boolean;
+    isSequence: boolean;
+}
+
 export enum NcDatatypeType {
     Primitive = 0,
     Typedef = 1,
@@ -148,6 +164,9 @@ export interface NcDatatypeDescriptor {
     name: string;
     type: number;
     items?: NcEnumItemDescriptor[];
+    fields?: NcFieldDescriptor[];
+    parentType?: string | null;
+    isSequence?: boolean;
 }
 
 export interface NcMethodResultDatatypeDescriptor extends NcMethodResult {
