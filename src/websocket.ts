@@ -33,9 +33,11 @@ export class WebSocketClient extends EventEmitter {
     private handleCounter = 1;
     private pendingRequests = new Map<number, PendingRequest>();
     private pendingSubscriptions = new Map<number, PendingRequest>();
+    private quiet: boolean;
 
-    constructor() {
+    constructor(options: { quiet?: boolean } = {}) {
         super();
+        this.quiet = options.quiet ?? false;
     }
 
     public connect(url: string): Promise<void> {
@@ -75,7 +77,9 @@ export class WebSocketClient extends EventEmitter {
             }, REQUEST_TIMEOUT_MS);
             this.pendingRequests.set(handle, { resolve, reject, timeout });
             const json = JSON.stringify(commandMsg);
-            console.log(`▶️ Sending command message: ${json}`);
+            if (!this.quiet) {
+                console.log(`▶️ Sending command message: ${json}`);
+            }
             this.ws?.send(json);
         });
     }
@@ -92,7 +96,9 @@ export class WebSocketClient extends EventEmitter {
             }, REQUEST_TIMEOUT_MS);
             this.pendingSubscriptions.set(0, { resolve, reject, timeout });
             const json = JSON.stringify(subscriptionsMsg);
-            console.log(`▶️ Sending subscription message: ${json}`);
+            if (!this.quiet) {
+                console.log(`▶️ Sending subscription message: ${json}`);
+            }
             this.ws?.send(json);
         });
     }
@@ -110,7 +116,9 @@ export class WebSocketClient extends EventEmitter {
             //  Check the response type
             if (isWebSocketResponse(parsedMessage)) {
                 // It's a response to a command msg we sent.
-                console.log(`◀️ Received command response message: ${message}`);
+                if (!this.quiet) {
+                    console.log(`◀️ Received command response message: ${message}`);
+                }
 
                 parsedMessage.responses.forEach(r => {
                     const pending = this.pendingRequests.get(r.handle);
@@ -131,7 +139,9 @@ export class WebSocketClient extends EventEmitter {
                 this.emit('notification', parsedMessage);
             } else if (isWebSocketSubscriptions(parsedMessage)) {
                 // It's a subscriptions response from the server.
-                console.log(`◀️ Received subscription response message: ${message}`);
+                if (!this.quiet) {
+                    console.log(`◀️ Received subscription response message: ${message}`);
+                }
                 const pending = this.pendingSubscriptions.get(0);
                 if (pending) {
                     clearTimeout(pending.timeout);

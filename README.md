@@ -32,6 +32,18 @@ npm start
 | `--port` | `-p` | `NMOS_IS04_PORT` | `8080` |
 | `--device-id` | `-d` | `NMOS_IS04_DEVICE_ID` | `c1fe9ed2-7602-43c3-a94d-eadd5338b9cd` |
 | `--version` | `-v` | `NMOS_IS04_VERSION` | `v1.3` |
+| `--export-device-tree` | | `NMOS_EXPORT_DEVICE_TREE` | off (demo mode) |
+| `--output` | `-o` | `NMOS_EXPORT_OUTPUT` | `device-tree-<timestamp>.html` |
+
+### Export a standalone device-tree HTML snapshot
+
+```bash
+npm start -- --export-device-tree --output ./device-tree.html
+```
+
+This walks the full IS-12 / MS-05-02 device model (including BCP-008 receiver/sender monitors and any vendor-specific classes/datatypes), captures property values, resolves class and datatype descriptors through `NcClassManager`, and writes a single offline HTML page.
+
+![Device tree HTML export screenshot](export-screenshot.png)
 
 Build
 ```
@@ -60,6 +72,7 @@ The following features have been implemented:
 * Finding a particular object by its role path to retrieve its oid (using FindMembersByPath in [NcBlock](https://specs.amwa.tv/ms-05-02/branches/v1.0.x/docs/Framework.html#ncblock))
 * Retrieving the descriptor of any class so it can be consumed generically (using GetControlClass in [NcClassManager](https://specs.amwa.tv/ms-05-02/branches/v1.0.x/docs/Framework.html#ncclassmanager))
 * Retrieving the descriptor of any datatype so it can be consumed generically (using GetDatatype in [NcClassManager](https://specs.amwa.tv/ms-05-02/branches/v1.0.x/docs/Framework.html#ncclassmanager))
+* Exporting a full offline HTML snapshot of a device model with `--export-device-tree` (object tree, property values, class/method descriptors, and resolvable datatype descriptors including vendor-specific types)
 
 ## Other useful resources
 
