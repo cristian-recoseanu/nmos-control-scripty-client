@@ -93,9 +93,9 @@ async function main() {
     try {
         const { deviceIs04Address, deviceIs04Port, is04DeviceId, is04Version } = config;
 
-        var is04Url = `http://${deviceIs04Address}:${deviceIs04Port}/x-nmos/node/${is04Version}/devices/${is04DeviceId}`;
+        const is04Url = `http://${deviceIs04Address}:${deviceIs04Port}/x-nmos/node/${is04Version}/devices/${is04DeviceId}`;
 
-        var ncpControlType = 'urn:x-nmos:control:ncp/v1.0';
+        const ncpControlType = 'urn:x-nmos:control:ncp/v1.0';
 
         logSection('IS-04 device lookup');
         logStep(`Fetching device resource from ${is04Url}`);
@@ -125,14 +125,14 @@ async function main() {
         const getUserLabelCmdResult1 = await client.sendCommand<NcMethodResultString>(1, { level: 1, index: 1 }, { id: { level: 1, index: 6 } });
         logSuccess('Root user label:', getUserLabelCmdResult1.value);
 
-        var subscriptions: number[] = [ 1 ];
+        let subscriptions: number[] = [ 1 ];
 
         logSubsection('Subscriptions');
         logStep('Subscribe to root object oid 1');
         await client.sendSubscriptions<number[]>(subscriptions);
         logSuccess('Subscribed to root object oid 1');
 
-        var newLabel = "ABC XYZ";
+        let newLabel = "ABC XYZ";
         if(getUserLabelCmdResult1.value === newLabel)
             newLabel = "XYZ ABC";
 
@@ -341,7 +341,7 @@ async function main() {
             );
 
             for (const member of result.value) {
-                if(member.classId.join('.') == '1.1')
+                if(member.classId.join('.') === '1.1')
                 {
                     logInfo(`${indent}• Block — oid: ${member.oid}, role: ${member.role}, classId: ${member.classId.join('.')}`);
                     await discoverDeviceModel(client, member.oid, depth + 1);

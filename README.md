@@ -1,6 +1,6 @@
 # nmos-control-scripty-client
 
-[![Build Checks](https://github.com/cristian-recoseanu/nmos-control-scripty-client/actions/workflows/build_checks.yml/badge.svg)](https://github.com/cristian-recoseanu/nmos-control-scripty-client/actions/workflows/build_checks.yml)
+[![CI](https://github.com/cristian-recoseanu/nmos-control-scripty-client/actions/workflows/ci.yml/badge.svg)](https://github.com/cristian-recoseanu/nmos-control-scripty-client/actions/workflows/ci.yml)
 
 This is an example NMOS client implementing [IS-12](https://specs.amwa.tv/is-12/).  
 It serves as an implementation sample for Controller vendors, showcasing how to interact with device models expressed by [MS-05-02]() through the [IS-12](https://specs.amwa.tv/is-12/) protocol.
@@ -48,6 +48,11 @@ This walks the full IS-12 / MS-05-02 device model (including BCP-008 receiver/se
 Build
 ```
 npm run build
+```
+
+Run checks (lint, type-check, unit tests, build)
+```
+npm run check
 ```
 
 Run

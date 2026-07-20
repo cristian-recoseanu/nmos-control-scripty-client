@@ -3,13 +3,23 @@ const typescriptParser = require("@typescript-eslint/parser");
 
 module.exports = [
   {
-    files: ["**/*.ts"],
+    ignores: [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      "coverage/**",
+      "**/*.js",
+      "vitest.config.ts",
+    ],
+  },
+  {
+    files: ["src/**/*.ts", "test/**/*.ts"],
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: "module",
-        project: "./tsconfig.json"
+        project: "./tsconfig.eslint.json",
       },
       globals: {
         console: "readonly",
@@ -18,18 +28,27 @@ module.exports = [
         __dirname: "readonly",
         __filename: "readonly",
         module: "readonly",
-        require: "readonly"
-      }
+        require: "readonly",
+      },
     },
     plugins: {
-      "@typescript-eslint": typescriptEslint
+      "@typescript-eslint": typescriptEslint,
     },
     rules: {
       ...typescriptEslint.configs.recommended.rules,
-      // Add your custom rules here
-    }
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/explicit-function-return-type": "off",
+      "@typescript-eslint/no-explicit-any": "error",
+      "eqeqeq": ["error", "always"],
+      "no-console": "off",
+      "prefer-const": "error",
+      "no-var": "error",
+    },
   },
-  {
-    ignores: ["node_modules", "dist", "build", "coverage", "**/*.js"]
-  }
 ];
