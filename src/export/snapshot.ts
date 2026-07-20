@@ -1,3 +1,4 @@
+import { classIdKey } from '../classId';
 import { WebSocketClient } from '../websocket';
 import {
     NcBlockMemberDescriptor,
@@ -46,10 +47,6 @@ export interface DeviceTreeSnapshot {
         propertyValueCount: number;
         propertyErrorCount: number;
     };
-}
-
-function classIdKey(classId: number[]): string {
-    return classId.join('.');
 }
 
 function propertyKey(id: NcElementId): string {
