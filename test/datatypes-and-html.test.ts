@@ -28,6 +28,7 @@ function minimalSnapshot(overrides: Partial<DeviceTreeSnapshot> = {}): DeviceTre
             websocketHref: 'ws://127.0.0.1:8080/x-nmos/ncp/v1.0/connect',
         },
         rootOid: 1,
+        classManagerOid: 3,
         objects: {
             '1': {
                 oid: 1,
@@ -108,8 +109,10 @@ describe('renderDeviceTreeHtml', () => {
     it('embeds the snapshot timestamp and device id', () => {
         const html = renderDeviceTreeHtml(minimalSnapshot());
         expect(html).toContain('2026-07-15T12:00:00.000Z');
+        expect(html).toContain('formatTimestamp');
         expect(html).toContain('device-id');
         expect(html).toContain('application/json');
+        expect(html).toContain('NMOS Device model snapshot');
     });
 
     it('marks vendor-specific classes in the generated page script', () => {
@@ -124,5 +127,32 @@ describe('renderDeviceTreeHtml', () => {
         expect(html).toContain('sequence');
         expect(html).toContain('nullable');
         expect(html).toContain('type-flags');
+    });
+
+    it('includes an IS-12 Get command dialog for properties', () => {
+        const html = renderDeviceTreeHtml(minimalSnapshot());
+        expect(html).toContain('data-cmd-oid');
+        expect(html).toContain('Show IS-12 Get command');
+        expect(html).toContain('command-dialog');
+        expect(html).toContain('buildGetPropertyCommand');
+        expect(html).toContain('navigator.clipboard.writeText');
+    });
+
+    it('includes ClassManager GetControlClass and GetDatatype command helpers in the side panel', () => {
+        const html = renderDeviceTreeHtml(minimalSnapshot());
+        expect(html).toContain('classManagerOid');
+        expect(html).toContain('drawer-cmd');
+        expect(html).toContain('buildGetControlClassCommand');
+        expect(html).toContain('buildGetDatatypeCommand');
+        expect(html).toContain('includeInherited: true');
+    });
+
+    it('includes a FindMembersByClassId command button next to the object class', () => {
+        const html = renderDeviceTreeHtml(minimalSnapshot());
+        expect(html).toContain('data-find-class-id');
+        expect(html).toContain('Show IS-12 FindMembersByClassId command');
+        expect(html).toContain('buildFindMembersByClassIdCommand');
+        expect(html).toContain('includeDerived: true');
+        expect(html).toContain('recurse: true');
     });
 });
