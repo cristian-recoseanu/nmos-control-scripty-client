@@ -36,6 +36,7 @@ export interface DeviceTreeSnapshot {
         websocketHref: string;
     };
     rootOid: number;
+    classManagerOid: number;
     objects: Record<string, DeviceObjectSnapshot>;
     classes: Record<string, NcClassDescriptor>;
     datatypes: Record<string, NcDatatypeDescriptor>;
@@ -247,6 +248,7 @@ export async function collectDeviceTreeSnapshot(
         timestamp,
         source,
         rootOid: 1,
+        classManagerOid,
         objects,
         classes,
         datatypes,

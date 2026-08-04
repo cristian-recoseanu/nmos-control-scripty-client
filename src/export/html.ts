@@ -312,6 +312,109 @@ code {
   text-transform: uppercase;
   padding: 2px 8px;
 }
+.prop-actions {
+  width: 52px;
+  text-align: right;
+  white-space: nowrap;
+}
+.cmd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+.cmd-btn:hover {
+  border-color: rgba(61, 214, 198, 0.45);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.cmd-btn svg { width: 16px; height: 16px; display: block; }
+.kv-inline {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.dialog-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(4, 8, 16, 0.62);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+  z-index: 40;
+}
+.dialog-backdrop.open { display: flex; }
+.dialog {
+  width: min(640px, 100%);
+  max-height: min(80vh, 720px);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.dialog header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.dialog header h2 { margin: 0; font-size: 1.05rem; }
+.dialog-actions { display: flex; gap: 8px; align-items: center; }
+.dialog-actions button {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+.dialog-actions button:hover { border-color: rgba(61, 214, 198, 0.4); }
+.dialog-actions .primary {
+  background: var(--accent-soft);
+  border-color: rgba(61, 214, 198, 0.35);
+  color: var(--accent);
+  font-weight: 600;
+}
+.dialog-actions .primary.copied {
+  border-color: rgba(61, 214, 198, 0.6);
+  color: #b7fff6;
+}
+.dialog-body {
+  padding: 16px;
+  overflow: auto;
+}
+.dialog-meta {
+  color: var(--muted);
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+}
+.dialog-body pre {
+  margin: 0;
+  font-family: var(--mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #0a101c;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  padding: 14px;
+  color: #d7e3f4;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
 .value {
   font-family: var(--mono);
   white-space: pre-wrap;
@@ -359,16 +462,14 @@ code {
   overflow: auto;
   box-shadow: var(--shadow);
 }
-.drawer header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.drawer header h2 { margin: 0; font-size: 1.1rem; }
-.drawer header button {
-  border: 1px solid var(--line);
-  background: var(--panel);
-  border-radius: 8px;
-  padding: 7px 12px;
-  cursor: pointer;
+.drawer header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.drawer header h2 { margin: 0; font-size: 1.1rem; flex: 1; min-width: 0; word-break: break-word; }
+.drawer-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.drawer header button#drawer-close {
+  border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 7px 12px; cursor: pointer;
 }
-.drawer header button:hover { border-color: rgba(61, 214, 198, 0.4); }
+.drawer header button#drawer-close:hover { border-color: rgba(61, 214, 198, 0.4); }
+.drawer-cmd[hidden] { display: none !important; }
 .stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
@@ -379,11 +480,10 @@ code {
 <body>
 <header class="app">
   <div>
-    <h1>NMOS Device Model Snapshot</h1>
+    <h1>NMOS Device model snapshot</h1>
     <div class="meta">
       Captured <strong id="ts"></strong><br>
-      Device <strong id="device"></strong> ·
-      <span id="endpoint"></span>
+      Device <strong id="device"></strong>
     </div>
     <div class="stats" id="stats"></div>
   </div>
@@ -403,9 +503,31 @@ code {
   <div class="drawer">
     <header>
       <h2 id="drawer-title">Descriptor</h2>
-      <button type="button" id="drawer-close">Close</button>
+      <div class="drawer-actions">
+        <button type="button" class="cmd-btn" id="drawer-cmd" hidden title="Show IS-12 command">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 6H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/><path d="M16 6h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-3"/><path d="M10 4l-2 16"/><path d="M16 4l-2 16"/>
+          </svg>
+        </button>
+        <button type="button" id="drawer-close">Close</button>
+      </div>
     </header>
     <div id="drawer-body"></div>
+  </div>
+</div>
+<div class="dialog-backdrop" id="command-dialog" role="dialog" aria-modal="true" aria-labelledby="command-dialog-title">
+  <div class="dialog">
+    <header>
+      <h2 id="command-dialog-title">IS-12 Get command</h2>
+      <div class="dialog-actions">
+        <button type="button" class="primary" id="command-copy">Copy</button>
+        <button type="button" id="command-close">Close</button>
+      </div>
+    </header>
+    <div class="dialog-body">
+      <p class="dialog-meta" id="command-dialog-meta"></p>
+      <pre id="command-dialog-json"></pre>
+    </div>
   </div>
 </div>
 <script id="snapshot-data" type="application/json">${payload}</script>
@@ -414,11 +536,24 @@ const SNAPSHOT = JSON.parse(document.getElementById('snapshot-data').textContent
 const objects = SNAPSHOT.objects;
 const classes = SNAPSHOT.classes;
 const datatypes = SNAPSHOT.datatypes;
+const classManagerOid = SNAPSHOT.classManagerOid;
 
-document.getElementById('ts').textContent = SNAPSHOT.timestamp;
+document.getElementById('ts').textContent = formatTimestamp(SNAPSHOT.timestamp);
 document.getElementById('device').textContent = SNAPSHOT.source.is04DeviceId;
-document.getElementById('endpoint').textContent =
-  SNAPSHOT.source.is04Address + ':' + SNAPSHOT.source.is04Port + ' / ' + SNAPSHOT.source.is04Version;
+
+function formatTimestamp(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return iso;
+  }
+  const pad = (value) => String(value).padStart(2, '0');
+  return date.getFullYear() + '/' +
+    pad(date.getMonth() + 1) + '/' +
+    pad(date.getDate()) + ' ' +
+    pad(date.getHours()) + ':' +
+    pad(date.getMinutes()) + ':' +
+    pad(date.getSeconds());
+}
 
 const stats = SNAPSHOT.stats;
 document.getElementById('stats').innerHTML = [
@@ -499,6 +634,13 @@ function classButton(classIdKey, name) {
     escapeHtml(name || classIdKey) + ' [' + escapeHtml(classIdKey) + ']</button>';
 }
 
+function commandButton(attributes, title) {
+  return '<button type="button" class="cmd-btn" title="' + escapeHtml(title) + '" ' + attributes + '>' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M8 6H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/><path d="M16 6h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-3"/><path d="M10 4l-2 16"/><path d="M16 4l-2 16"/>' +
+    '</svg></button>';
+}
+
 function formatValue(value) {
   if (value === undefined) return '<span class="empty">missing</span>';
   if (value === null) return '<span class="empty">null</span>';
@@ -561,7 +703,12 @@ function renderObject(oid) {
     return '<tr><td><code>' + escapeHtml(key) + '</code><br>' + escapeHtml(p.name) + '</td>' +
       '<td>' + typeRef(p.typeName, { isSequence: p.isSequence, isNullable: p.isNullable }) +
       (p.isReadOnly ? '<div style="margin-top:6px"><span class="badge">readonly</span></div>' : '') + '</td>' +
-      '<td>' + valueHtml + '</td></tr>';
+      '<td>' + valueHtml + '</td>' +
+      '<td class="prop-actions">' +
+      commandButton(
+        'data-cmd-oid="' + obj.oid + '" data-cmd-level="' + p.id.level + '" data-cmd-index="' + p.id.index + '" data-cmd-name="' + escapeHtml(p.name) + '"',
+        'Show IS-12 Get command'
+      ) + '</td></tr>';
   }).join('');
 
   const methods = cls.methods.map(m => {
@@ -585,27 +732,33 @@ function renderObject(oid) {
     '</div>' +
     '<dl class="kv">' +
     '<dt>OID</dt><dd>' + obj.oid + '</dd>' +
-    '<dt>Class</dt><dd>' + classButton(obj.classIdKey, cls.name) +
+    '<dt>Class</dt><dd><span class="kv-inline">' + classButton(obj.classIdKey, cls.name) +
+      commandButton(
+        'data-find-class-id="' + escapeHtml(JSON.stringify(obj.classId)) + '"',
+        'Show IS-12 FindMembersByClassId command'
+      ) +
       (isVendorSpecificClass(obj.classId)
-        ? ' ' + vendorBadge(obj.classId) +
+        ? vendorBadge(obj.classId) +
           ' <span class="badge flag">authority ' + escapeHtml(String(getAuthorityKey(obj.classId))) + '</span>'
         : '') +
-    '</dd>' +
+    '</span></dd>' +
     '<dt>User label</dt><dd>' + escapeHtml(obj.userLabel == null ? 'null' : String(obj.userLabel)) + '</dd>' +
     '<dt>Owner</dt><dd>' + (obj.owner == null ? 'null' : obj.owner) + '</dd>' +
     '<dt>Constant OID</dt><dd>' + String(obj.constantOid) + '</dd>' +
-    '<dt>Children</dt><dd>' + (
-      obj.children.length
-        ? obj.children.map(childOid => {
-            const child = objects[String(childOid)];
-            return escapeHtml(child ? child.role : ('oid ' + childOid));
-          }).join(', ')
-        : 'none'
-    ) + '</dd>' +
+    (isBlockClass(obj.classId)
+      ? '<dt>Children</dt><dd>' + (
+          obj.children.length
+            ? obj.children.map(childOid => {
+                const child = objects[String(childOid)];
+                return escapeHtml(child ? child.role : ('oid ' + childOid));
+              }).join(', ')
+            : 'none'
+        ) + '</dd>'
+      : '') +
     '</dl>' +
     '<h3>Properties (' + cls.properties.length + ')</h3>' +
     (props
-      ? '<div class="table-wrap"><table><thead><tr><th>Property</th><th>Type</th><th>Value at capture</th></tr></thead><tbody>' + props + '</tbody></table></div>'
+      ? '<div class="table-wrap"><table><thead><tr><th>Property</th><th>Type</th><th>Value at capture</th><th></th></tr></thead><tbody>' + props + '</tbody></table></div>'
       : '<p class="empty">No properties</p>') +
     '<h3>Methods (' + cls.methods.length + ')</h3>' +
     (methods
@@ -626,6 +779,12 @@ function showDatatype(name) {
   const dt = datatypes[name];
   const body = document.getElementById('drawer-body');
   document.getElementById('drawer-title').textContent = name;
+  setDrawerCommand({
+    kind: 'datatype',
+    title: 'IS-12 GetDatatype command',
+    meta: 'GetDatatype("' + name + '") on ClassManager oid ' + classManagerOid,
+    command: buildGetDatatypeCommand(name),
+  });
   if (!dt) {
     body.innerHTML = '<p class="empty">Datatype descriptor was not resolved for ' + escapeHtml(name) + '.</p>';
   } else {
@@ -656,6 +815,13 @@ function showClass(classIdKey) {
   const cls = classes[classIdKey];
   const body = document.getElementById('drawer-body');
   document.getElementById('drawer-title').textContent = classIdKey;
+  const classId = cls ? cls.classId : classIdKey.split('.').map(Number);
+  setDrawerCommand({
+    kind: 'class',
+    title: 'IS-12 GetControlClass command',
+    meta: 'GetControlClass([' + classId.join(', ') + ']) on ClassManager oid ' + classManagerOid,
+    command: buildGetControlClassCommand(classId),
+  });
   if (!cls) {
     body.innerHTML = '<p class="empty">Class descriptor missing.</p>';
   } else {
@@ -676,6 +842,131 @@ function showClass(classIdKey) {
       '</dl>';
   }
   document.getElementById('drawer').classList.add('open');
+}
+
+let currentCommandJson = '';
+let drawerCommand = null;
+
+function buildGetPropertyCommand(oid, level, index) {
+  return {
+    messageType: 0,
+    commands: [
+      {
+        handle: 1,
+        oid: oid,
+        methodId: { level: 1, index: 1 },
+        arguments: {
+          id: { level: level, index: index }
+        }
+      }
+    ]
+  };
+}
+
+function buildGetControlClassCommand(classId) {
+  return {
+    messageType: 0,
+    commands: [
+      {
+        handle: 1,
+        oid: classManagerOid,
+        methodId: { level: 3, index: 1 },
+        arguments: {
+          classId: classId,
+          includeInherited: true
+        }
+      }
+    ]
+  };
+}
+
+function buildGetDatatypeCommand(name) {
+  return {
+    messageType: 0,
+    commands: [
+      {
+        handle: 1,
+        oid: classManagerOid,
+        methodId: { level: 3, index: 2 },
+        arguments: {
+          name: name,
+          includeInherited: true
+        }
+      }
+    ]
+  };
+}
+
+function buildFindMembersByClassIdCommand(classId) {
+  return {
+    messageType: 0,
+    commands: [
+      {
+        handle: 1,
+        oid: 1,
+        methodId: { level: 2, index: 4 },
+        arguments: {
+          classId: classId,
+          includeDerived: true,
+          recurse: true
+        }
+      }
+    ]
+  };
+}
+
+function setDrawerCommand(command) {
+  drawerCommand = command;
+  const btn = document.getElementById('drawer-cmd');
+  if (!classManagerOid || !command) {
+    btn.hidden = true;
+    btn.title = 'Show IS-12 command';
+    return;
+  }
+  btn.hidden = false;
+  btn.title = command.kind === 'class'
+    ? 'Show IS-12 GetControlClass command'
+    : 'Show IS-12 GetDatatype command';
+}
+
+function clearDrawerCommand() {
+  drawerCommand = null;
+  const btn = document.getElementById('drawer-cmd');
+  btn.hidden = true;
+}
+
+function closeCommandDialog() {
+  document.getElementById('command-dialog').classList.remove('open');
+  const copyBtn = document.getElementById('command-copy');
+  copyBtn.textContent = 'Copy';
+  copyBtn.classList.remove('copied');
+}
+
+function openCommandDialog(title, meta, command) {
+  currentCommandJson = JSON.stringify(command, null, 2);
+  document.getElementById('command-dialog-title').textContent = title;
+  document.getElementById('command-dialog-meta').textContent = meta;
+  document.getElementById('command-dialog-json').textContent = currentCommandJson;
+  const copyBtn = document.getElementById('command-copy');
+  copyBtn.textContent = 'Copy';
+  copyBtn.classList.remove('copied');
+  document.getElementById('command-dialog').classList.add('open');
+}
+
+function showGetPropertyCommand(oid, level, index, propertyName) {
+  openCommandDialog(
+    'IS-12 Get command',
+    'Get ' + propertyName + ' (' + level + 'p' + index + ') on oid ' + oid,
+    buildGetPropertyCommand(oid, level, index)
+  );
+}
+
+function showFindMembersByClassIdCommand(classId) {
+  openCommandDialog(
+    'IS-12 FindMembersByClassId command',
+    'FindMembersByClassId([' + classId.join(', ') + ']) on root block oid 1',
+    buildFindMembersByClassIdCommand(classId)
+  );
 }
 
 function setActive(oid) {
@@ -699,6 +990,26 @@ document.getElementById('tree').addEventListener('click', (event) => {
 });
 
 document.getElementById('main').addEventListener('click', (event) => {
+  const findClassBtn = event.target.closest('[data-find-class-id]');
+  if (findClassBtn) {
+    try {
+      const classId = JSON.parse(findClassBtn.getAttribute('data-find-class-id'));
+      showFindMembersByClassIdCommand(classId);
+    } catch (error) {
+      console.error('Failed to parse class id for FindMembersByClassId command', error);
+    }
+    return;
+  }
+  const cmdBtn = event.target.closest('[data-cmd-oid]');
+  if (cmdBtn) {
+    showGetPropertyCommand(
+      Number(cmdBtn.getAttribute('data-cmd-oid')),
+      Number(cmdBtn.getAttribute('data-cmd-level')),
+      Number(cmdBtn.getAttribute('data-cmd-index')),
+      cmdBtn.getAttribute('data-cmd-name') || 'property'
+    );
+    return;
+  }
   const typeBtn = event.target.closest('[data-type]');
   if (typeBtn) {
     showDatatype(typeBtn.getAttribute('data-type'));
@@ -713,15 +1024,40 @@ document.getElementById('main').addEventListener('click', (event) => {
 document.getElementById('drawer').addEventListener('click', (event) => {
   if (event.target.id === 'drawer' || event.target.id === 'drawer-close') {
     document.getElementById('drawer').classList.remove('open');
+    clearDrawerCommand();
+    return;
+  }
+  const drawerCmd = event.target.closest('#drawer-cmd');
+  if (drawerCmd && drawerCommand) {
+    openCommandDialog(drawerCommand.title, drawerCommand.meta, drawerCommand.command);
     return;
   }
   const typeBtn = event.target.closest('[data-type]');
   if (typeBtn) showDatatype(typeBtn.getAttribute('data-type'));
 });
 
+document.getElementById('command-dialog').addEventListener('click', (event) => {
+  if (event.target.id === 'command-dialog' || event.target.id === 'command-close') {
+    closeCommandDialog();
+  }
+});
+
+document.getElementById('command-copy').addEventListener('click', async () => {
+  const copyBtn = document.getElementById('command-copy');
+  try {
+    await navigator.clipboard.writeText(currentCommandJson);
+    copyBtn.textContent = 'Copied';
+    copyBtn.classList.add('copied');
+  } catch (error) {
+    copyBtn.textContent = 'Copy failed';
+  }
+});
+
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     document.getElementById('drawer').classList.remove('open');
+    clearDrawerCommand();
+    closeCommandDialog();
   }
 });
 
