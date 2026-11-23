@@ -25,11 +25,11 @@
     "@types/eslint": "^9.6.1",
     "@types/node": "^26.6.6",
     "@types/ws": "^8.18.2",
-    "@typescript-eslint/eslint-plugin": "^8.72.2",
+    "@typescript-eslint/eslint-plugin": "^8.73.0",
     "@typescript-eslint/parser": "^8.58.0",
-    "eslint": "^10.14.0",
+    "eslint": "^10.15.0",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.1"
   }
 }
